@@ -18,8 +18,11 @@ const newEpaData = () => {
 
 export default function App() {
   const [screen, setScreen] = useState('landing');
-  const [mode, setMode] = useState(null);
-  const [trainee, setTrainee] = useState({ name: 'Test Resident', pgy: '', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
+  // mode removed — the form defaults ("Test Resident", PGY-3, today's date,
+  // Test CCC Member) make it trivial to explore the tool without entering
+  // fake data, and no assessment is persisted until the user explicitly
+  // clicks Finalize. A separate Demo Mode was redundant.
+  const [trainee, setTrainee] = useState({ name: 'Test Resident', pgy: 'PGY-3', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
   const [gutCheck, setGutCheck] = useState({ answer: null, notes: '' });
   const [themes, setThemes] = useState({ strengths: '', growth: '' });
   const [skipLevel2, setSkipLevel2] = useState(false);
@@ -92,7 +95,6 @@ export default function App() {
     const snapshot = {
       finalizedAt: stamp,
       trainee,
-      mode,
       gutCheck,
       themes,
       epaData,
@@ -130,8 +132,7 @@ export default function App() {
 
   const restart = () => {
     setScreen('landing');
-    setMode(null);
-    setTrainee({ name: 'Test Resident', pgy: '', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
+    setTrainee({ name: 'Test Resident', pgy: 'PGY-3', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
     setGutCheck({ answer: null, notes: '' });
     setThemes({ strengths: '', growth: '' });
     setSkipLevel2(false);
@@ -168,7 +169,6 @@ export default function App() {
           screen={screen}
           epaIndex={epaIndex}
           epaStep={epaStep}
-          mode={mode}
           trainee={trainee}
           certified={certified}
           canBack={history.length > 0}
@@ -189,14 +189,7 @@ export default function App() {
             badges={badges}
             priorCycles={priorCycles}
             onOpenLearn={() => goto({ screen: 'learn' })}
-            onStart={() => {
-              setMode('full');
-              goto({ screen: 'gutcheck' });
-            }}
-            onDemo={() => {
-              setMode('demo');
-              goto({ screen: 'gutcheck' });
-            }}
+            onStart={() => goto({ screen: 'gutcheck' })}
           />
         )}
         {screen === 'quiz' && (
@@ -274,6 +267,7 @@ export default function App() {
               epaData={epaData}
               skipLevel2={skipLevel2}
               certified={certified}
+              gutCheckAnswer={gutCheck.answer}
               assignLevel={assignLevel}
               updateNote={updateNote}
               advanceStep={(s) => goto({ epaStep: s })}
@@ -283,7 +277,6 @@ export default function App() {
         )}
         {screen === 'summary' && (
           <Summary
-            mode={mode}
             trainee={trainee}
             gutCheck={gutCheck}
             themes={themes}
@@ -312,9 +305,9 @@ export default function App() {
   );
 }
 
-function Header({ screen, epaIndex, epaStep, mode, trainee, certified, canBack, onBack, onRestart, onJumpSummary }) {
+function Header({ screen, epaIndex, epaStep, trainee, certified, canBack, onBack, onRestart, onJumpSummary }) {
   let position = '';
-  if (screen === 'gutcheck') position = 'Gut Check';
+  if (screen === 'gutcheck') position = 'Overall Call';
   else if (screen === 'learn') position = 'Learn';
   else if (screen === 'quiz') position = 'Knowledge Check';
   else if (screen === 'streamlineQuiz') position = 'Streamline Certification';
@@ -328,7 +321,7 @@ function Header({ screen, epaIndex, epaStep, mode, trainee, certified, canBack, 
       : `EPA ${EPAS[epaIndex].id} — Step ${epaStep + 1} of 6`;
   else if (screen === 'summary') position = 'Summary';
 
-  const label = mode === 'demo' ? 'Demo Mode' : trainee.name || 'Assessment';
+  const label = trainee.name || 'Assessment';
 
   return (
     <header className="topbar">
@@ -350,24 +343,40 @@ function Header({ screen, epaIndex, epaStep, mode, trainee, certified, canBack, 
   );
 }
 
-function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, badges, priorCycles, onOpenLearn, onStart, onDemo }) {
+function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, badges, priorCycles, onOpenLearn, onStart }) {
   const earned = Object.keys(badges || {});
   const cycles = priorCycles || [];
   return (
     <div className="landing">
-      <div className="hero">
-        <div className="hero-eyebrow">CCC Entrustment Decision Tool</div>
-        <h1>Pediatric EPA review,<br />one decision at a time.</h1>
-        <p className="subtitle">
-          A structured walkthrough for Clinical Competency Committees reviewing General Pediatrics
-          entrustment decisions. Built to teach, document, and export.
-        </p>
-      </div>
+      <div className="landing-split">
+        <div className="landing-hero reveal reveal-1">
+          <div className="hero-eyebrow">CCC Entrustment Decision Tool</div>
+          <h1>Pediatric EPA review,<br />one decision at a time.</h1>
+          <p className="subtitle">
+            A structured walkthrough for Clinical Competency Committees reviewing General Pediatrics
+            entrustment decisions. Built to teach, document, and export.
+          </p>
 
-      <div className="landing-grid">
-        <div className="card elevated">
-          <div className="card-eyebrow">Full Assessment</div>
-          <h2>Review a trainee</h2>
+          <div className="learn-strip reveal reveal-3">
+            <div className="learn-strip-meta">
+              <span className="learn-strip-eyebrow">Learn Hub</span>
+              <span className="learn-strip-title">Modules · Quizzes · Badges</span>
+              {earned.length > 0 && (
+                <span className="learn-strip-badges">
+                  {earned.map((b) => <BadgePill key={b} id={b} />)}
+                </span>
+              )}
+            </div>
+            <button className="btn-ghost" onClick={onOpenLearn}>Open →</button>
+          </div>
+        </div>
+
+        <div className="card elevated landing-form reveal reveal-2">
+          <div className="card-eyebrow">Start a review</div>
+          <h2>Who is the committee reviewing?</h2>
+          <p className="landing-sub">
+            Fields are pre-filled for exploring. Nothing commits until you finalize at the end.
+          </p>
           <div className="form">
             <label>Trainee name<input value={trainee.name} onChange={(e) => setTrainee({ ...trainee, name: e.target.value })} /></label>
             <label>PGY level<input value={trainee.pgy} onChange={(e) => setTrainee({ ...trainee, pgy: e.target.value })} /></label>
@@ -385,45 +394,19 @@ function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, ba
                   <li key={c.finalizedAt}>
                     <span className="cycle-date">{new Date(c.finalizedAt).toLocaleDateString()}</span>
                     <span className="cycle-reviewer">Finalized by {c.trainee?.chair || 'Unknown reviewer'}</span>
-                    <span className="cycle-gutcheck">Gut check: <strong>{c.gutCheck?.answer || '—'}</strong></span>
+                    <span className="cycle-gutcheck">Overall call: <strong>{c.gutCheck?.answer || '—'}</strong></span>
                   </li>
                 ))}
               </ul>
               <p className="prior-cycles-note">
-                These will appear as context during this review — weigh them in, but new data
-                may change the call.
+                Weigh them in — but new data may change the call.
               </p>
             </div>
           )}
-          <button className="btn-primary block" onClick={onStart}>Begin Assessment →</button>
+          <button className="btn-primary block cta-glow" onClick={onStart}>
+            Begin Assessment →
+          </button>
         </div>
-
-        <div className="card demo-card">
-          <div className="card-eyebrow">Demo Mode</div>
-          <h2>Explore the algorithm</h2>
-          <p>
-            Walk through the decision flow without entering trainee information. Great for
-            training your CCC or seeing how the tool works end-to-end.
-          </p>
-          <button className="btn-secondary block" onClick={onDemo}>Try Demo Mode →</button>
-        </div>
-      </div>
-
-      <div className="card learn-card">
-        <div className="card-eyebrow">Education</div>
-        <h2>Learn & earn badges</h2>
-        <p>
-          Short modules, optional quizzes, and badges that unlock faster paths through the tool.
-          Your badges are saved to this browser and carry across sessions.
-        </p>
-        {earned.length > 0 && (
-          <div className="badges-row">
-            {earned.map((b) => (
-              <BadgePill key={b} id={b} />
-            ))}
-          </div>
-        )}
-        <button className="btn-secondary" onClick={onOpenLearn}>Open Learn Hub →</button>
       </div>
 
       <div className="card settings-card">
@@ -541,6 +524,13 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, onConti
             </p>
           </div>
 
+          <ComingPanel
+            variant="nlp"
+            icon="✦"
+            title="NLP-drafted themes from narrative data"
+            body="A connected program will see draft strengths and growth areas synthesized from MSF comments, rotation evaluations, and continuity-preceptor narratives — ready for the committee to accept, edit, or reject. The committee still owns the voice."
+          />
+
           {!certified && (
             <div className="help-seeking-note compact">
               <strong>Don't overlook help-seeking.</strong> A learner who knows their limits and
@@ -627,7 +617,7 @@ const BADGE_META = {
     title: 'Streamline',
     icon: '⚡',
     desc: 'Demonstrated competence in when and how to bulk-assign levels across EPAs responsibly.',
-    unlocks: 'Offers bulk assignment paths after the gut check — Level 5 for all, baseline 3A/3B/4, or skip Level 2 across all EPAs.',
+    unlocks: 'Offers bulk assignment paths after the overall call — Level 5 for all, baseline 3A/3B/4, or skip Level 2 across all EPAs.',
   },
 };
 
@@ -666,7 +656,7 @@ function LearnHub({ badges, onOpenQuiz, onOpenStreamlineQuiz, onOpenPrimer, onBa
       id: 'streamline',
       title: 'Streamline Certification',
       kind: 'Quiz only',
-      desc: 'Prove you know when bulk assignment is safe and when it is not. Passing unlocks streamline mode after the gut check: affirm Level 5 for all, pre-fill a baseline level, or skip the Level 2 question across all EPAs.',
+      desc: 'Prove you know when bulk assignment is safe and when it is not. Passing unlocks streamline mode after the overall call: affirm Level 5 for all, pre-fill a baseline level, or skip the Level 2 question across all EPAs.',
       action: onOpenStreamlineQuiz,
       actionLabel: 'Take streamline certification',
     },
@@ -788,108 +778,17 @@ const QUIZ_QUESTIONS = [
   },
 ];
 
+// Thin wrapper — uses the same GenericQuiz renderer as StreamlineQuiz.
 function Quiz({ onPass, onCancel }) {
-  const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-
-  const allAnswered = QUIZ_QUESTIONS.every((_, i) => answers[i] !== undefined);
-  const correctCount = QUIZ_QUESTIONS.filter((q, i) => answers[i] === q.correct).length;
-  const passed = correctCount === QUIZ_QUESTIONS.length;
-
   return (
-    <div className="screen quiz-screen">
-      <div className="card-eyebrow">Knowledge Check</div>
-      <h1>Prove you know the framework</h1>
-      <p className="quiz-lede">
-        Answer all five correctly and the app will hide the teaching content on every screen. If
-        you miss any, we'll show you which concepts to review and you can try again.
-      </p>
-
-      <div className="quiz-questions">
-        {QUIZ_QUESTIONS.map((q, i) => {
-          const userAnswer = answers[i];
-          const isCorrect = userAnswer === q.correct;
-          return (
-            <div
-              key={i}
-              className={`quiz-q ${submitted ? (isCorrect ? 'correct' : 'wrong') : ''}`}
-            >
-              <div className="quiz-q-num">Question {i + 1} of {QUIZ_QUESTIONS.length}</div>
-              <h3 className="quiz-q-text">{q.q}</h3>
-              <div className="quiz-options">
-                {q.opts.map((o, j) => {
-                  const isPicked = userAnswer === j;
-                  const showCorrect = submitted && j === q.correct;
-                  const showWrong = submitted && isPicked && j !== q.correct;
-                  return (
-                    <button
-                      key={j}
-                      className={`quiz-opt ${isPicked ? 'picked' : ''} ${showCorrect ? 'correct' : ''} ${showWrong ? 'wrong' : ''}`}
-                      onClick={() => !submitted && setAnswers({ ...answers, [i]: j })}
-                      disabled={submitted}
-                    >
-                      <span className="quiz-opt-letter">{String.fromCharCode(65 + j)}</span>
-                      <span>{o}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {submitted && (
-                <div className={`quiz-explain ${isCorrect ? 'correct' : 'wrong'}`}>
-                  <strong>{isCorrect ? '✓ Correct.' : '✗ Not quite.'}</strong> {q.why}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {!submitted && (
-        <div className="button-row">
-          <button
-            className="btn-primary"
-            disabled={!allAnswered}
-            onClick={() => setSubmitted(true)}
-          >
-            Submit Answers
-          </button>
-          <button className="btn-secondary" onClick={onCancel}>Cancel</button>
-        </div>
-      )}
-
-      {submitted && (
-        <div className="quiz-result">
-          <div className={`quiz-score ${passed ? 'passed' : 'failed'}`}>
-            {correctCount} / {QUIZ_QUESTIONS.length} correct
-          </div>
-          {passed ? (
-            <>
-              <h3>You passed.</h3>
-              <p>The app will now hide the teaching callouts and level descriptors on every screen. You can always re-take this from the landing page if you want to reset.</p>
-              <div className="button-row">
-                <button className="btn-primary" onClick={onPass}>Continue to the tool →</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h3>Review the concepts above and try again.</h3>
-              <p>The explanations on each missed question will help. You can retake the check as many times as you need.</p>
-              <div className="button-row">
-                <button
-                  className="btn-primary"
-                  onClick={() => { setAnswers({}); setSubmitted(false); }}
-                >
-                  Retake
-                </button>
-                <button className="btn-secondary" onClick={onCancel}>
-                  Go back without passing
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-    </div>
+    <GenericQuiz
+      title="Practice-Ready Knowledge Check"
+      lede="Answer all five correctly and the app will hide the teaching content on every screen. If you miss any, we'll show you which concepts to review and you can try again."
+      questions={QUIZ_QUESTIONS}
+      passMessage="The app will now hide teaching callouts and level descriptors on every screen. You can always re-take this from the Learn Hub if you want to reset."
+      onPass={onPass}
+      onCancel={onCancel}
+    />
   );
 }
 
@@ -898,12 +797,12 @@ const STREAMLINE_QUIZ_QUESTIONS = [
     q: 'When is it appropriate to affirm Level 5 for all 12 EPAs at once?',
     opts: [
       'Whenever a senior resident is under review',
-      'Whenever the committee has answered "Yes" to the gut check AND the data supports practice-readiness across the full scope of general pediatrics',
+      'Whenever the committee has answered "Yes" to the overall call AND the data supports practice-readiness across the full scope of general pediatrics',
       'Whenever scheduling pressure makes per-EPA review impractical',
       "Never — every EPA must be reviewed individually regardless of the committee's overall judgment",
     ],
     correct: 1,
-    why: 'Bulk affirmation is appropriate when the gut check is Yes AND the aggregate data supports practice-readiness across the breadth of general pediatrics. The committee still owns the obligation to flag any EPA that feels like an exception.',
+    why: 'Bulk affirmation is appropriate when the overall call is Yes AND the aggregate data supports practice-readiness across the breadth of general pediatrics. The committee still owns the obligation to flag any EPA that feels like an exception.',
   },
   {
     q: 'After bulk-assigning a baseline level across all EPAs, your obligation is to…',
@@ -928,7 +827,7 @@ const STREAMLINE_QUIZ_QUESTIONS = [
     why: 'The critical distinction is supervisor availability. At Level 4, the supervisor is not required to be readily available. At 3A and 3B, the supervisor must remain readily available to provide immediate support. The 3A vs 3B gradient is about degree of oversight when available.',
   },
   {
-    q: 'If the gut check is "Not yet" but the committee agrees no EPA requires a supervisor proactively assigned to the room every time, the appropriate streamline action is…',
+    q: 'If the overall call is "Not yet" but the committee agrees no EPA requires a supervisor proactively assigned to the room every time, the appropriate streamline action is…',
     opts: [
       'Assign Level 2B to all EPAs as a safe default',
       'Skip the Level 2 question across all EPAs for this review — every EPA will be 3A, 3B, 4, or 5',
@@ -957,7 +856,7 @@ function StreamlineQuiz({ onPass, onCancel }) {
       title="Streamline Certification"
       lede="Pass this 5-question check and the app will unlock streamline mode: the ability to pre-fill Level 5 (or a baseline 3A/3B/4) across all EPAs at once, with a review step for exceptions. The streamline path also lets you skip the Level 2 question across all EPAs in one step."
       questions={STREAMLINE_QUIZ_QUESTIONS}
-      passMessage="You passed. Streamline mode is unlocked. After the gut check, you'll be offered bulk-assignment paths you can use or decline on any given review."
+      passMessage="You passed. Streamline mode is unlocked. After the overall call, you'll be offered bulk-assignment paths you can use or decline on any given review."
       onPass={onPass}
       onCancel={onCancel}
     />
@@ -1308,7 +1207,7 @@ function StreamlineOffer({ gutCheck, setSkipLevel2, onContinue }) {
       <div className="card-eyebrow">One orienting question</div>
       <h1>Before we walk each EPA…</h1>
       <p className="intro-lede">
-        You answered <strong>{answer}</strong> to the gut check. Every EPA will be walked
+        You answered <strong>{answer}</strong> to the overall call. Every EPA will be walked
         through the full algorithm individually — <strong>nothing will be pre-assigned</strong>.
         The only question to settle up front is whether the committee already knows the answer
         to the Level 2 question for every EPA.
@@ -1456,6 +1355,89 @@ function DataPrimer({ onBack }) {
             you make your thought process <strong>transparent and documented</strong> so that
             others — including the learner — can understand how you got there.
           </div>
+          <div className="ebm-pretest">
+            <div className="ebm-pretest-eyebrow">Pretest probability is real — and asymmetric</div>
+            <p className="ebm-pretest-lede">
+              Prior-cycle levels are the pretest probability for this cycle's call. But how that
+              probability behaves depends on where the learner sits on the scale — because
+              <em> progress is expected</em>, and training time is finite.
+            </p>
+
+            <div className="ebm-pretest-label">Scenario A — top of the scale</div>
+            <div className="ebm-scenario">
+              <div className="ebm-scenario-setup">
+                <span className="ebm-label">Setup</span>
+                <p>
+                  A trainee was assigned <strong>Level 5</strong> at the last{' '}
+                  <strong>two consecutive cycles</strong>. Current data is thin.
+                </p>
+              </div>
+              <div className="ebm-scenario-answer">
+                <span className="ebm-label">Reasoning</span>
+                <p>
+                  Pretest probability they are still a 5? <strong>High.</strong> Competence at
+                  this level, demonstrated consistently, rarely regresses without a precipitating
+                  event. Thin current data is not evidence of decline — it is thin current data.
+                  Absent a signal that moves you, the prior call holds.
+                </p>
+              </div>
+              <div className="ebm-scenario-warning">
+                <span className="ebm-label">Where this breaks</span>
+                <p>
+                  If new data contains a specific concerning signal — a missed serious diagnosis,
+                  a breakdown in communication, a failure of help-seeking — the prior is
+                  overridden by the likelihood ratio of the new finding. Pretest probability
+                  tells the committee what the new data has to clear to change the call.
+                </p>
+              </div>
+            </div>
+
+            <div className="ebm-pretest-pivot">
+              <span className="ebm-pretest-pivot-arrow">↓</span>
+              <span>But the same "thin data" produces opposite reasoning at lower levels.</span>
+            </div>
+
+            <div className="ebm-pretest-label alt">Scenario B — mid-scale, progress expected</div>
+            <div className="ebm-scenario">
+              <div className="ebm-scenario-setup">
+                <span className="ebm-label">Setup</span>
+                <p>
+                  A trainee was assigned <strong>Level 3A</strong> at the last{' '}
+                  <strong>two consecutive cycles</strong>. Current data is thin.
+                </p>
+              </div>
+              <div className="ebm-scenario-alert">
+                <span className="ebm-label">Reasoning</span>
+                <p>
+                  "Still a 3A" is <strong>not a safe carryover</strong>. Competency-based
+                  training expects trajectory. Two cycles at the same sub-practice-ready level
+                  is <em>itself a signal</em> — especially with thin current data. The real
+                  question is not "are they still a 3A?" but <strong>"why isn't the learner at
+                  3B or higher yet, and do we have the data to know?"</strong>
+                </p>
+              </div>
+              <div className="ebm-scenario-warning">
+                <span className="ebm-label">The committee's obligation</span>
+                <p>
+                  At lower levels the obligation is <em>stronger</em>, not weaker, when data is
+                  thin. Either seek more data (continuity preceptor, rotation director, targeted
+                  observations) before deciding, or explicitly name the <strong>trajectory
+                  concern</strong> in the notes. Training time is finite. A committee that
+                  silently carries forward 3A without probing whether growth has actually
+                  occurred is not serving the learner.
+                </p>
+              </div>
+            </div>
+
+            <div className="ebm-pretest-synth">
+              <strong>The synthesis:</strong> pretest probability is not a rule that says
+              "prior level holds." It is a rule that tells you <em>which direction new data
+              has to move you</em>. At the top, the prior holds unless new evidence lowers it.
+              At the middle, the prior is a starting hypothesis that progress <em>should</em>
+              have already raised — and the committee's job is to find out why it hasn't.
+            </div>
+          </div>
+
           <div className="ebm-ideal">
             <div className="ebm-ideal-eyebrow">In an ideal world</div>
             <p>
@@ -1470,6 +1452,28 @@ function DataPrimer({ onBack }) {
 
       <div className="button-row">
         <button className="btn-primary" onClick={onBack}>← Back</button>
+      </div>
+    </div>
+  );
+}
+
+// Subtle, animated "future capability" marker — used to hint at connected
+// data, NLP synthesis, and collaborative review features that the prototype
+// is architected for but has not yet shipped.
+function ComingPanel({ icon, title, body, variant = 'default' }) {
+  return (
+    <div className={`coming-panel coming-${variant}`}>
+      <div className="coming-shimmer" aria-hidden="true" />
+      <div className="coming-head">
+        <span className="coming-dot" aria-hidden="true" />
+        <span className="coming-eyebrow">Coming capability</span>
+      </div>
+      <div className="coming-body">
+        {icon && <span className="coming-icon">{icon}</span>}
+        <div>
+          <h4>{title}</h4>
+          <p>{body}</p>
+        </div>
       </div>
     </div>
   );
@@ -1568,12 +1572,12 @@ function EpaPicker({ epaData, onPick, onSummary }) {
   );
 }
 
-function EpaFlow({ epaIndex, epaStep, epaData, skipLevel2, certified, assignLevel, updateNote, advanceStep, finish }) {
+function EpaFlow({ epaIndex, epaStep, epaData, skipLevel2, certified, gutCheckAnswer, assignLevel, updateNote, advanceStep, finish }) {
   const epa = EPAS[epaIndex];
   const data = epaData[epa.id];
 
   if (epaStep === 0)
-    return <EpaHeader epa={epa} data={data} certified={certified} onBegin={() => advanceStep(1)} onKeep={finish} />;
+    return <EpaHeader epa={epa} data={data} certified={certified} skipLevel2={skipLevel2} gutCheckAnswer={gutCheckAnswer} onBegin={() => advanceStep(1)} onKeep={finish} />;
 
   if (epaStep === 1)
     return (
@@ -1714,7 +1718,7 @@ function EpaResult({ epa, level, onContinue }) {
   );
 }
 
-function EpaHeader({ epa, data, certified, onBegin, onKeep }) {
+function EpaHeader({ epa, data, certified, skipLevel2, gutCheckAnswer, onBegin, onKeep }) {
   const previously = data.level;
   return (
     <div className="screen">
@@ -1729,6 +1733,19 @@ function EpaHeader({ epa, data, certified, onBegin, onKeep }) {
             affirmation step — meaning you have an explicit signal to slow down, surface
             concerns, and make this discussion more thorough than usual. Take your time with
             the notes and name what's driving the committee's uncertainty.
+          </p>
+        </div>
+      )}
+
+      {gutCheckAnswer === 'Not yet' && (
+        <div className="per-epa-callout">
+          <div className="per-epa-callout-eyebrow">Per-EPA decision, not overall</div>
+          <p>
+            You answered <strong>"Not yet"</strong> to the overall call — but that was a
+            composite judgment across the whole scope of practice. A learner can be{' '}
+            <strong>practice ready for one EPA and not another</strong>. That's precisely why we
+            walk through each EPA individually — so the committee can name where the learner has
+            arrived and where they still need time.
           </p>
         </div>
       )}
@@ -1752,10 +1769,12 @@ function EpaHeader({ epa, data, certified, onBegin, onKeep }) {
           <li>
             <strong>Is this learner practice ready?</strong> — If yes, they're a Level 5.
           </li>
-          <li>
-            <strong>Do they need a supervisor proactively in the room every time?</strong> — If
-            yes, they're a Level 2A or 2B.
-          </li>
+          {!skipLevel2 && (
+            <li>
+              <strong>Do they need a supervisor proactively in the room every time?</strong> — If
+              yes, they're a Level 2A or 2B.
+            </li>
+          )}
           <li>
             <strong>Do they need just limited support, with the supervisor not needing to be
             readily available?</strong> — If yes, they're a Level 4.
@@ -1764,6 +1783,13 @@ function EpaHeader({ epa, data, certified, onBegin, onKeep }) {
             <strong>Otherwise: is it close oversight (3A) or moderate oversight (3B)?</strong>
           </li>
         </ol>
+        {skipLevel2 && (
+          <p className="walkthrough-note">
+            The Level 2 question has been <strong>skipped</strong> based on the committee's
+            earlier decision that no EPA requires a supervisor proactively in the room every
+            time. Every EPA will land at Level 3A, 3B, 4, or 5.
+          </p>
+        )}
       </div>}
 
       {previously && (
@@ -1848,6 +1874,14 @@ function DecisionScreen({
         value={data.notes[step]}
         onChange={updateNote}
       />
+
+      <ComingPanel
+        variant="data"
+        icon="⚡"
+        title="Aggregate data for this EPA"
+        body="A connected institution will see direct observations, MSF excerpts, continuity-preceptor narratives, and cross-EPA signals surfaced here — alongside the decision, not hidden behind it. The committee decides; the data just shows up."
+      />
+
       {showFootnote && !certified && <Footnote />}
     </div>
   );
@@ -1898,7 +1932,7 @@ function NotesArea({ label, value, onChange, rows = 5 }) {
   );
 }
 
-function Summary({ mode, trainee, gutCheck, themes, epaData, finalizedAt, onFinalize, onJumpToEpa, onRestart }) {
+function Summary({ trainee, gutCheck, themes, epaData, finalizedAt, onFinalize, onJumpToEpa, onRestart }) {
   const [showFinalize, setShowFinalize] = useState(false);
   const counts = useMemo(() => {
     const c = {};
@@ -1911,15 +1945,13 @@ function Summary({ mode, trainee, gutCheck, themes, epaData, finalizedAt, onFina
 
   const formatText = () => {
     const lines = [];
-    lines.push(mode === 'demo' ? 'Demo Assessment' : 'CCC Entrustment Assessment');
-    if (mode !== 'demo') {
-      lines.push(`Trainee: ${trainee.name}`);
-      lines.push(`PGY: ${trainee.pgy}`);
-      lines.push(`Review period: ${trainee.period}`);
-      lines.push(`CCC reviewer: ${trainee.chair}`);
-    }
+    lines.push('CCC Entrustment Assessment');
+    lines.push(`Trainee: ${trainee.name}`);
+    lines.push(`PGY: ${trainee.pgy}`);
+    lines.push(`Review period: ${trainee.period}`);
+    lines.push(`CCC reviewer: ${trainee.chair}`);
     lines.push('');
-    lines.push(`Gut check: ${gutCheck.answer || '(not answered)'}`);
+    lines.push(`Overall call: ${gutCheck.answer || '(not answered)'}`);
     if (gutCheck.notes) lines.push(`Notes: ${gutCheck.notes}`);
     const pushList = (title, raw) => {
       const items = raw.split('\n').map((s) => s.trim()).filter(Boolean);
@@ -1956,21 +1988,17 @@ function Summary({ mode, trainee, gutCheck, themes, epaData, finalizedAt, onFina
     const splitLines = (s) => (s || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
     const meta = [
-      ['Report type', mode === 'demo' ? 'Demo Assessment' : 'CCC Entrustment Assessment'],
+      ['Report type', 'CCC Entrustment Assessment'],
       ['Generated', new Date().toISOString()],
+      ['Trainee', trainee.name],
+      ['PGY level', trainee.pgy],
+      ['Review period', trainee.period],
+      ['CCC reviewer', trainee.chair],
     ];
-    if (mode !== 'demo') {
-      meta.push(
-        ['Trainee', trainee.name],
-        ['PGY level', trainee.pgy],
-        ['Review period', trainee.period],
-        ['CCC reviewer', trainee.chair]
-      );
-    }
     meta.push(
       [],
-      ['Gut check answer', gutCheck.answer || ''],
-      ['Gut check notes', stripNewlines(gutCheck.notes)],
+      ['Overall call answer', gutCheck.answer || ''],
+      ['Overall call notes', stripNewlines(gutCheck.notes)],
       [],
       ['Strengths', ''],
       ...splitLines(themes.strengths).map((s) => ['', s]),
@@ -2029,7 +2057,7 @@ function Summary({ mode, trainee, gutCheck, themes, epaData, finalizedAt, onFina
     wsDist['!cols'] = [{ wch: 8 }, { wch: 60 }, { wch: 8 }];
     XLSX.utils.book_append_sheet(wb, wsDist, 'Distribution');
 
-    const filename = `ccc-${mode === 'demo' ? 'demo' : (trainee.name || 'assessment').replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const filename = `ccc-${(trainee.name || 'assessment').replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, filename);
   };
 
@@ -2050,44 +2078,43 @@ function Summary({ mode, trainee, gutCheck, themes, epaData, finalizedAt, onFina
 
   return (
     <div className="screen summary">
-      <h1>{mode === 'demo' ? 'Demo Assessment' : 'CCC Assessment Summary'}</h1>
+      <h1>CCC Assessment Summary</h1>
 
       {finalizedAt ? (
-        <div className="finalized-banner finalized">
-          <span className="finalized-icon">✓</span>
-          <div>
-            <div className="finalized-eyebrow">Finalized</div>
-            <p>
-              This assessment was committed on{' '}
-              <strong>{new Date(finalizedAt).toLocaleString()}</strong>. It is now saved to this
-              browser under <strong>{trainee.name || 'Unknown trainee'}</strong> and will be
-              available as a prior cycle the next time this trainee is reviewed.
-            </p>
+          <div className="finalized-banner finalized">
+            <span className="finalized-icon">✓</span>
+            <div>
+              <div className="finalized-eyebrow">Finalized</div>
+              <p>
+                This assessment was committed on{' '}
+                <strong>{new Date(finalizedAt).toLocaleString()}</strong>. It is now saved to this
+                browser under <strong>{trainee.name || 'Unknown trainee'}</strong> and will be
+                available as a prior cycle the next time this trainee is reviewed.
+              </p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="finalized-banner pending">
-          <span className="finalized-icon">◌</span>
-          <div>
-            <div className="finalized-eyebrow">Not yet finalized</div>
-            <p>
-              This assessment is a <strong>draft</strong>. Finalize it below to commit the
-              decisions and make them available as prior-cycle data for this trainee's next
-              review.
-            </p>
+        ) : (
+          <div className="finalized-banner pending">
+            <span className="finalized-icon">◌</span>
+            <div>
+              <div className="finalized-eyebrow">Not yet finalized</div>
+              <p>
+                This assessment is a <strong>draft</strong>. Finalize it below to commit the
+                decisions and make them available as prior-cycle data for this trainee's next
+                review.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
-      {mode !== 'demo' && (
-        <div className="summary-header">
-          <div><strong>Trainee:</strong> {trainee.name}</div>
-          <div><strong>PGY:</strong> {trainee.pgy}</div>
-          <div><strong>Review period:</strong> {trainee.period}</div>
-          <div><strong>CCC reviewer:</strong> {trainee.chair}</div>
-        </div>
-      )}
+        )
+      }
+      <div className="summary-header">
+        <div><strong>Trainee:</strong> {trainee.name}</div>
+        <div><strong>PGY:</strong> {trainee.pgy}</div>
+        <div><strong>Review period:</strong> {trainee.period}</div>
+        <div><strong>CCC reviewer:</strong> {trainee.chair}</div>
+      </div>
       <div className="card">
-        <h3>Gut check</h3>
+        <h3>Overall call</h3>
         <p><strong>{gutCheck.answer || 'Not answered'}</strong></p>
         {gutCheck.notes && <p>{gutCheck.notes}</p>}
       </div>
@@ -2173,8 +2200,15 @@ function Summary({ mode, trainee, gutCheck, themes, epaData, finalizedAt, onFina
         </p>
       </div>
 
+      <ComingPanel
+        variant="share"
+        icon="↗"
+        title="Share with the resident and their coach"
+        body="A future release lets the committee send this summary — with every rationale intact — directly into the resident's and coach's portal, with space for them to respond, ask questions, and co-author a growth plan. Assessment becomes learning, in the same tool."
+      />
+
       <div className="button-row">
-        {!finalizedAt && mode !== 'demo' && (
+        {!finalizedAt && (
           <button
             className="btn-finalize"
             onClick={() => setShowFinalize(true)}

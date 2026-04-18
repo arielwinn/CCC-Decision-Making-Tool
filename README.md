@@ -110,6 +110,10 @@ This tool is opinionated. It believes:
 - **The decision is a trajectory, not a point estimate.** Prior-cycle data should be weighed in, and new data may change the call.
 - **CCC decisions parallel evidence-based medicine**: no single test gives the truth. You make an informed judgment based on available data with a transparent, documented thought process.
 
+## What's next
+
+See [ROADMAP.md](./ROADMAP.md) for where this is going — data connectors, NLP-assisted narrative synthesis, and a research arc on cross-EPA influence mapping. The prototype was architected so each of those layers drops into an existing hook point, not a ground-up rebuild.
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).
