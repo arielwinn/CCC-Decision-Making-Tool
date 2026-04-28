@@ -508,26 +508,27 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
       {isJuniorLearner(pgy) ? (
         <>
           <div className="pgy-context-eyebrow">
-            For {pgy === 'PGY-1' ? 'an intern' : 'a junior'} — the question shifts
+            {pgy === 'PGY-1' ? 'For an intern' : 'For a junior'}
           </div>
           <h2 className="question">
             Do you have reason to believe this learner is overall at <em>Level 4 or 5</em>?
           </h2>
           <div className="junior-normalizing-callout">
-            <div className="junior-norm-eyebrow">This is expected developmental territory</div>
+            <div className="junior-norm-eyebrow">A threshold, not a ceiling</div>
             <p>
-              For most interns and early juniors — especially in the{' '}
-              <strong>first 18 months of training</strong> — the answer here is{' '}
-              <strong>"Not yet."</strong> That is the expected trajectory, not a concern. Training
-              is designed for them to be acquiring the experience that gets them to 4 or 5, not
-              arriving there.
+              In the <strong>first 18 months of training</strong>, many residents are at Level 4
+              or 5 for some EPAs — and many aren't yet. <strong>Both are okay.</strong> Level 4
+              or 5 is a <em>threshold</em>, not a <em>ceiling</em>: clearing it doesn't mean
+              training is done, and not clearing it doesn't mean something is wrong. The
+              committee's job is to read each learner where they actually are, not against an
+              expectation.
             </p>
             <p>
-              The operative work for this cohort is two-fold:{' '}
-              <strong>identify what specific gaps need attention</strong>, and{' '}
-              <strong>confirm you have continuous data showing progress</strong>. A junior without
-              trajectory data isn't necessarily struggling — they're invisible to us. That itself
-              is something the CCC must act on.
+              Whichever way you answer, the operative work is the same:{' '}
+              <strong>name what specific areas need attention</strong> if you said "Not yet," and{' '}
+              <strong>confirm you have continuous data showing trajectory</strong>. A junior
+              without trajectory data isn't necessarily struggling — they're invisible to us.
+              That itself is something the CCC must act on.
             </p>
           </div>
         </>
