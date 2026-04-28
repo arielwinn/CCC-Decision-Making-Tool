@@ -35,6 +35,15 @@ export default function App() {
     answer: null,
     overallLevel: null,      // '4' | '5' | 'between' — only relevant when answer === 'Yes'
     overallRationale: '',    // required when answer === 'Yes'
+    // Q2 (drivers) — only relevant when answer is 'Not yet' or 'Unsure'.
+    // 'specific' = specific gaps; 'exposure' = unfamiliarity / insufficient exposure;
+    // 'mix' = a mix of both.
+    driversKind: null,
+    driversNotes: '',
+    // Q3 (trajectory) — also only when answer is 'Not yet' or 'Unsure'.
+    // 'progressing' | 'plateau' | 'thin-data'
+    trajectory: null,
+    trajectoryNotes: '',
     notes: '',
   });
   const [themes, setThemes] = useState({ strengths: '', growth: '' });
@@ -146,7 +155,16 @@ export default function App() {
   const restart = () => {
     setScreen('landing');
     setTrainee({ name: 'Test Resident', pgy: 'PGY-3', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
-    setGutCheck({ answer: null, overallLevel: null, overallRationale: '', notes: '' });
+    setGutCheck({
+      answer: null,
+      overallLevel: null,
+      overallRationale: '',
+      driversKind: null,
+      driversNotes: '',
+      trajectory: null,
+      trajectoryNotes: '',
+      notes: '',
+    });
     setThemes({ strengths: '', growth: '' });
     setSkipLevel2(false);
     // Note: badges persist across restarts on purpose (training investment).
@@ -480,24 +498,41 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
   // which is Level 5 by definition; Level 4 at this stage is concerning).
   const setAnswer = (a) => {
     if (a === 'Yes') {
+      // Yes path: clear Q2/Q3 (they only apply to Not yet / Unsure).
       setGutCheck({
         ...gutCheck,
         answer: a,
         overallLevel: seniorMode ? '5' : (gutCheck.overallLevel || null),
+        driversKind: null,
+        driversNotes: '',
+        trajectory: null,
+        trajectoryNotes: '',
       });
     } else {
-      setGutCheck({ ...gutCheck, answer: a, overallLevel: null, overallRationale: '' });
+      // Not yet / Unsure path: clear Yes sub-fields (overallLevel, rationale).
+      setGutCheck({
+        ...gutCheck,
+        answer: a,
+        overallLevel: null,
+        overallRationale: '',
+      });
     }
   };
 
   const showInternL5 =
     gutCheck.answer === 'Yes' && gutCheck.overallLevel === '5' && isIntern(pgy);
 
+  const isNotYet = gutCheck.answer === 'Not yet' || gutCheck.answer === 'Unsure';
+
   const canContinue = (() => {
     if (!gutCheck.answer) return false;
     if (gutCheck.answer === 'Yes') {
       if (!gutCheck.overallLevel) return false;
       if (gutCheck.overallRationale.trim().length < 10) return false;
+    }
+    if (isNotYet) {
+      if (!gutCheck.driversKind) return false;
+      if (!gutCheck.trajectory) return false;
     }
     return true;
   })();
@@ -666,6 +701,127 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
               </div>
 
               {showInternL5 && <InternL5Callout context="overall" />}
+            </div>
+          )}
+
+          {isNotYet && (
+            <div className="overall-followups reveal-soft">
+              <div className="overall-followups-eyebrow">
+                Two diagnostic questions before EPA review
+              </div>
+              <p className="overall-followups-lede">
+                Before walking individual EPAs, the committee needs to commit to two answers.
+                These shape <em>what</em> the per-EPA review is actually for.
+              </p>
+
+              <div className="followup-q">
+                <div className="followup-q-num">Q2 · Drivers</div>
+                <div className="followup-q-text">
+                  Do you know what specific areas are driving "Not yet" — or is it more about{' '}
+                  <em>unfamiliarity and insufficient exposure</em>?
+                </div>
+                <div className="followup-q-choices">
+                  {[
+                    {
+                      key: 'specific',
+                      label: 'Specific gaps',
+                      sub: 'The committee can name which areas need attention',
+                    },
+                    {
+                      key: 'exposure',
+                      label: 'Insufficient exposure',
+                      sub: 'Not necessarily a gap — they have not yet had the experience',
+                    },
+                    {
+                      key: 'mix',
+                      label: 'Both / a mix',
+                      sub: 'Some specific gaps, some areas still developing through exposure',
+                    },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      className={`followup-choice ${gutCheck.driversKind === opt.key ? 'selected' : ''}`}
+                      onClick={() => setGutCheck({ ...gutCheck, driversKind: opt.key })}
+                    >
+                      <span className="followup-choice-label">{opt.label}</span>
+                      <span className="followup-choice-sub">{opt.sub}</span>
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="followup-notes"
+                  rows={3}
+                  value={gutCheck.driversNotes}
+                  onChange={(e) => setGutCheck({ ...gutCheck, driversNotes: e.target.value })}
+                  placeholder={
+                    gutCheck.driversKind === 'specific'
+                      ? 'Which specific areas? e.g. acute care escalation, behavioral health communication, complex care coordination…'
+                      : gutCheck.driversKind === 'exposure'
+                      ? 'Which experiences are still pending? e.g. limited NICU exposure, no overnight call yet, hasn’t carried complex continuity panel…'
+                      : 'Name the mix — what is specific, and what is still developing through exposure?'
+                  }
+                />
+              </div>
+
+              <div className="followup-q">
+                <div className="followup-q-num">Q3 · Trajectory</div>
+                <div className="followup-q-text">
+                  Do you have <em>sufficient continuous data</em> showing this learner is
+                  progressing — not plateauing?
+                </div>
+                <div className="followup-q-choices">
+                  {[
+                    {
+                      key: 'progressing',
+                      label: 'Yes — clearly progressing',
+                      sub: 'Continuous data, trajectory is upward',
+                    },
+                    {
+                      key: 'plateau',
+                      label: 'Concerning — looks like plateau',
+                      sub: 'Continuous data, but trajectory is flat or backward',
+                    },
+                    {
+                      key: 'thin-data',
+                      label: 'Thin data — cannot tell',
+                      sub: 'The learner is invisible to us. The CCC must act on this.',
+                    },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      className={`followup-choice ${gutCheck.trajectory === opt.key ? 'selected' : ''} traj-${opt.key}`}
+                      onClick={() => setGutCheck({ ...gutCheck, trajectory: opt.key })}
+                    >
+                      <span className="followup-choice-label">{opt.label}</span>
+                      <span className="followup-choice-sub">{opt.sub}</span>
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="followup-notes"
+                  rows={3}
+                  value={gutCheck.trajectoryNotes}
+                  onChange={(e) => setGutCheck({ ...gutCheck, trajectoryNotes: e.target.value })}
+                  placeholder={
+                    gutCheck.trajectory === 'thin-data'
+                      ? 'What data is missing, and what action will the CCC take? e.g. request rotation director feedback, ensure direct observation next block…'
+                      : gutCheck.trajectory === 'plateau'
+                      ? 'Where is the plateau showing up? What plan is in place to address it?'
+                      : gutCheck.trajectory === 'progressing'
+                      ? 'Note the signal — what data shows trajectory? (continuity preceptor, prior-cycle delta, narrative patterns…)'
+                      : 'Name the trajectory and the data that anchors it.'
+                  }
+                />
+                {gutCheck.trajectory === 'thin-data' && (
+                  <div className="followup-thin-data-callout">
+                    <strong>This itself is something the CCC must act on.</strong> A learner
+                    without trajectory data isn't necessarily struggling — they're invisible to
+                    us. Name the action plan in the notes above.
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

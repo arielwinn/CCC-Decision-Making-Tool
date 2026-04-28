@@ -3421,6 +3421,158 @@ select:hover { border-color: var(--border-strong); }
 }
 
 /* =============================================================
+   Q2 + Q3 follow-up block (when answer is Not yet / Unsure)
+   ============================================================= */
+.overall-followups {
+  margin-top: 18px;
+  padding: 22px 24px;
+  background: linear-gradient(160deg, #fff7ed 0%, #fffaf0 60%, var(--surface) 100%);
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #ea580c;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.overall-followups-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: #9a3412;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 10px;
+}
+.overall-followups-lede {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--navy-ink);
+  margin: 0 0 22px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.overall-followups-lede em { color: #9a3412; font-style: italic; font-weight: 600; }
+
+.followup-q {
+  margin-bottom: 22px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.followup-q:last-child { margin-bottom: 0; }
+.followup-q-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 6px;
+}
+.followup-q-text {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--navy-ink);
+  margin-bottom: 14px;
+  letter-spacing: -0.005em;
+  font-weight: 500;
+}
+.followup-q-text em {
+  color: #9a3412;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.followup-q-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (max-width: 700px) {
+  .followup-q-choices { grid-template-columns: 1fr; }
+}
+.followup-choice {
+  text-align: left;
+  background: var(--bg-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: all 0.15s ease;
+}
+.followup-choice:hover {
+  border-color: var(--navy);
+  transform: translateY(-1px);
+}
+.followup-choice.selected {
+  border-color: #ea580c;
+  background: #ffedd5;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.18);
+}
+.followup-choice.selected.traj-progressing {
+  border-color: #16a34a;
+  background: #dcfce7;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.18);
+}
+.followup-choice.selected.traj-plateau {
+  border-color: #dc2626;
+  background: #fee2e2;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+.followup-choice.selected.traj-thin-data {
+  border-color: #7c3aed;
+  background: #ede9fe;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+.followup-choice-label {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy-ink);
+  letter-spacing: -0.005em;
+}
+.followup-choice-sub {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.followup-notes {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+  background: #fafbfc;
+  margin-top: 4px;
+}
+.followup-notes:focus {
+  outline: none;
+  border-color: #ea580c;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+  background: var(--surface);
+}
+
+.followup-thin-data-callout {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #ede9fe;
+  border-left: 3px solid #7c3aed;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #4c1d95;
+}
+.followup-thin-data-callout strong { color: #4c1d95; font-weight: 700; display: inline; }
+
+/* =============================================================
    Level 4 / 5 definitions card — operational vocabulary anchor
    ============================================================= */
 .level-defs-card {
