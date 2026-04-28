@@ -3662,6 +3662,10 @@ select:hover { border-color: var(--border-strong); }
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
+.level-defs-grid.single {
+  grid-template-columns: 1fr;
+  max-width: 720px;
+}
 @media (max-width: 760px) {
   .level-defs-grid { grid-template-columns: 1fr; }
 }

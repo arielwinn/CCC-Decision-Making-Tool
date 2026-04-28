@@ -620,7 +620,7 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
           : 'Definitions below.'}
       </p>
 
-      <LevelDefinitionsCard />
+      <LevelDefinitionsCard seniorMode={seniorMode} />
 
       {isJuniorLearner(pgy) && (
         <div className="junior-normalizing-callout">
@@ -1885,11 +1885,13 @@ function DataPrimer({ onBack }) {
 // refers to SAFETY OVERSIGHT, separate from the teaching and growth a supervisor
 // continues to provide at every level. Competence isn't the end of teaching —
 // only the end of assigned safety oversight.
-function LevelDefinitionsCard() {
+function LevelDefinitionsCard({ seniorMode = false }) {
   return (
-    <div className="level-defs-card">
-      <div className="level-defs-eyebrow">What Level 4 and Level 5 mean</div>
-      <div className="level-defs-grid">
+    <div className={`level-defs-card ${seniorMode ? 'level-defs-senior' : ''}`}>
+      <div className="level-defs-eyebrow">
+        {seniorMode ? 'What practice ready (Level 5) means' : 'What Level 4 and Level 5 mean'}
+      </div>
+      <div className={`level-defs-grid ${seniorMode ? 'single' : ''}`}>
         <div className="level-def level-def-5">
           <div className="level-def-pill" style={{ background: '#4caf50' }}>5</div>
           <div className="level-def-body">
@@ -1906,22 +1908,24 @@ function LevelDefinitionsCard() {
           </div>
         </div>
 
-        <div className="level-def level-def-4">
-          <div className="level-def-pill" style={{ background: '#aed15a' }}>4</div>
-          <div className="level-def-body">
-            <div className="level-def-headline">Not quite practice ready, but close</div>
-            <p>
-              A supervisor is <strong>still required</strong> to ensure this learner's care is
-              safe and effective — but they only need to provide <strong>limited support</strong>
-              around that safety oversight, and they do not need to be readily available.
-            </p>
-            <p className="level-def-aside">
-              "Limited support" refers only to the safety-oversight role. The teaching and growth
-              a supervisor provides is a <em>separate</em> role that continues at every level —
-              and is one of the gifts of residency, not a sign the learner isn't ready.
-            </p>
+        {!seniorMode && (
+          <div className="level-def level-def-4">
+            <div className="level-def-pill" style={{ background: '#aed15a' }}>4</div>
+            <div className="level-def-body">
+              <div className="level-def-headline">Not quite practice ready, but close</div>
+              <p>
+                A supervisor is <strong>still required</strong> to ensure this learner's care is
+                safe and effective — but they only need to provide <strong>limited support</strong>
+                around that safety oversight, and they do not need to be readily available.
+              </p>
+              <p className="level-def-aside">
+                "Limited support" refers only to the safety-oversight role. The teaching and growth
+                a supervisor provides is a <em>separate</em> role that continues at every level —
+                and is one of the gifts of residency, not a sign the learner isn't ready.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
