@@ -524,18 +524,62 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
 
   const isNotYet = gutCheck.answer === 'Not yet' || gutCheck.answer === 'Unsure';
 
-  const canContinue = (() => {
-    if (!gutCheck.answer) return false;
+  // Compute what's missing — used both to gate Continue and to tell the user why.
+  const missing = (() => {
+    const items = [];
+    if (!gutCheck.answer) {
+      items.push({
+        label: 'Pick Yes, Not yet, or Unsure',
+        target: '.gutcheck-choices',
+      });
+      return items;
+    }
     if (gutCheck.answer === 'Yes') {
-      if (!gutCheck.overallLevel) return false;
-      if (gutCheck.overallRationale.trim().length < 10) return false;
+      if (!gutCheck.overallLevel) {
+        items.push({
+          label: 'Choose a level (Level 4, Level 5, or Between)',
+          target: '.overall-level-choices',
+        });
+      }
+      if (gutCheck.overallRationale.trim().length < 10) {
+        items.push({
+          label: 'Document a rationale (at least a sentence) for why this learner is at this level',
+          target: '#overall-rationale-text',
+        });
+      }
     }
     if (isNotYet) {
-      if (!gutCheck.driversKind) return false;
-      if (!gutCheck.trajectory) return false;
+      if (!gutCheck.driversKind) {
+        items.push({
+          label: 'Q2 — choose what is driving "Not yet" (specific gaps, exposure, or both)',
+          target: '.followup-q:nth-of-type(1) .followup-q-choices',
+        });
+      }
+      if (!gutCheck.trajectory) {
+        items.push({
+          label: 'Q3 — choose the trajectory (progressing, plateau, or thin data)',
+          target: '.followup-q:nth-of-type(2) .followup-q-choices',
+        });
+      }
     }
-    return true;
+    return items;
   })();
+  const canContinue = missing.length === 0;
+
+  const focusFirstMissing = () => {
+    if (missing.length === 0) return;
+    const target = document.querySelector(missing[0].target);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // For inputs, focus them; for groups, focus the first focusable child.
+      if (typeof target.focus === 'function' && target.tagName !== 'DIV') {
+        target.focus();
+      } else {
+        const firstFocusable = target.querySelector('button, input, textarea, select');
+        firstFocusable?.focus();
+      }
+    }
+  };
 
   return (
     <div className="screen">
@@ -935,7 +979,43 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
         </div>
       </div>
       <p className="note">Regardless of your answer, you'll now walk through each EPA.</p>
-      <button className="btn-primary" disabled={!canContinue} onClick={onContinue}>
+
+      {!canContinue && (
+        <div className="continue-blockers" role="status" aria-live="polite">
+          <div className="continue-blockers-eyebrow">
+            {missing.length === 1 ? 'One thing left' : `${missing.length} things left`} before continuing
+          </div>
+          <ul>
+            {missing.map((m, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  className="continue-blocker-link"
+                  onClick={() => {
+                    const target = document.querySelector(m.target);
+                    if (!target) return;
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const f =
+                      typeof target.focus === 'function' && target.tagName !== 'DIV'
+                        ? target
+                        : target.querySelector('button, input, textarea, select');
+                    f?.focus?.();
+                  }}
+                >
+                  {m.label} →
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button
+        className={`btn-primary ${!canContinue ? 'pseudo-disabled' : ''}`}
+        aria-disabled={!canContinue}
+        onClick={canContinue ? onContinue : focusFirstMissing}
+        title={canContinue ? undefined : 'Some answers are still required — click to jump to the next one.'}
+      >
         Continue to EPA Review
       </button>
     </div>
