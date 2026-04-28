@@ -3,6 +3,7 @@ import { EPAS, LEVELS, FOOTNOTE, framingQuestion } from './data';
 import './App.css';
 
 const isIntern = (pgy) => pgy === 'PGY-1';
+const isJuniorLearner = (pgy) => pgy === 'PGY-1' || pgy === 'PGY-2';
 const isSenior = (pgy) => pgy === 'PGY-3' || pgy === 'PGY-4+';
 
 const newEpaData = () => {
@@ -504,10 +505,38 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
           and the <span className="gutcheck-hero-accent">future patients</span> they will care for.
         </p>
       </div>
-      <h2 className="question">
-        If this learner started in a typical General Pediatrics practice today and began caring
-        for future patients, would their care be safe and effective?
-      </h2>
+      {isJuniorLearner(pgy) ? (
+        <>
+          <div className="pgy-context-eyebrow">
+            For {pgy === 'PGY-1' ? 'an intern' : 'a junior'} — the question shifts
+          </div>
+          <h2 className="question">
+            Do you have reason to believe this learner is overall at <em>Level 4 or 5</em>?
+          </h2>
+          <div className="junior-normalizing-callout">
+            <div className="junior-norm-eyebrow">This is expected developmental territory</div>
+            <p>
+              For most interns and early juniors — especially in the{' '}
+              <strong>first 18 months of training</strong> — the answer here is{' '}
+              <strong>"Not yet."</strong> That is the expected trajectory, not a concern. Training
+              is designed for them to be acquiring the experience that gets them to 4 or 5, not
+              arriving there.
+            </p>
+            <p>
+              The operative work for this cohort is two-fold:{' '}
+              <strong>identify what specific gaps need attention</strong>, and{' '}
+              <strong>confirm you have continuous data showing progress</strong>. A junior without
+              trajectory data isn't necessarily struggling — they're invisible to us. That itself
+              is something the CCC must act on.
+            </p>
+          </div>
+        </>
+      ) : (
+        <h2 className="question">
+          If this learner started in a typical General Pediatrics practice today and began caring
+          for future patients, would their care be safe and effective?
+        </h2>
+      )}
       {!certified && (
         <div className="frame-banner">
           <div className="frame-banner-eyebrow">What the bar actually means</div>

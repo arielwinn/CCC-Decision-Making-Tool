@@ -3297,3 +3297,53 @@ select:hover { border-color: var(--border-strong); }
 .intern-l5-overall { margin: 18px 0 4px; }
 .intern-l5-epa { max-width: 720px; margin: 22px auto; }
 .intern-l5-summary { margin: 18px 0 24px; }
+
+/* =============================================================
+   PGY-aware Overall Call header for juniors
+   ============================================================= */
+.pgy-context-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  padding: 5px 14px;
+  background: var(--sage-light);
+  border-radius: 100px;
+  margin-bottom: 14px;
+}
+.question em {
+  color: var(--navy);
+  font-style: italic;
+  font-weight: 700;
+  background: linear-gradient(180deg, transparent 60%, rgba(139, 176, 151, 0.35) 60%);
+  padding: 0 4px;
+}
+
+.junior-normalizing-callout {
+  background: linear-gradient(135deg, #f5f3ff 0%, #faf5ff 100%);
+  border: 1px solid #ddd6fe;
+  border-left: 4px solid #8b5cf6;
+  border-radius: var(--radius);
+  padding: 22px 26px;
+  margin: 18px 0 24px;
+  box-shadow: var(--shadow-sm);
+  animation: softReveal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.junior-norm-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: #6d28d9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 10px;
+}
+.junior-normalizing-callout p {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.junior-normalizing-callout p:last-child { margin-bottom: 0; }
+.junior-normalizing-callout strong { color: #4c1d95; font-weight: 700; }
