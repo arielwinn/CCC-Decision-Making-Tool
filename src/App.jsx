@@ -473,12 +473,19 @@ function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, ba
 }
 
 function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, onContinue }) {
+  const seniorMode = isSenior(pgy);
+
   // When the answer changes, reset the Yes-only sub-fields to keep state clean.
+  // For seniors, "Yes" maps directly to Level 5 (the question is "practice ready?",
+  // which is Level 5 by definition; Level 4 at this stage is concerning).
   const setAnswer = (a) => {
     if (a === 'Yes') {
-      setGutCheck({ ...gutCheck, answer: a });
+      setGutCheck({
+        ...gutCheck,
+        answer: a,
+        overallLevel: seniorMode ? '5' : (gutCheck.overallLevel || null),
+      });
     } else {
-      // Switching to Not yet / Unsure clears the Yes-only fields.
       setGutCheck({ ...gutCheck, answer: a, overallLevel: null, overallRationale: '' });
     }
   };
@@ -521,10 +528,18 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
 
       <h2 className="question question-imagine">
         Imagine this learner entering a typical General Pediatrics practice today and caring for
-        patients in that setting. Would they meet criteria for{' '}
-        <em>Level 4 or 5</em>?
+        patients in that setting.{' '}
+        {seniorMode ? (
+          <>Would they be <em>practice ready</em>?</>
+        ) : (
+          <>Would they meet criteria for <em>Level 4 or 5</em>?</>
+        )}
       </h2>
-      <p className="question-followup">Definitions below.</p>
+      <p className="question-followup">
+        {seniorMode
+          ? 'At this stage of training, Level 4 starts to be concerning — the goal is Level 5. Definitions below.'
+          : 'Definitions below.'}
+      </p>
 
       <LevelDefinitionsCard />
 
@@ -592,35 +607,42 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
 
           {gutCheck.answer === 'Yes' && (
             <div className="overall-yes-block reveal-soft">
-              <div className="overall-yes-eyebrow">Make it specific</div>
+              <div className="overall-yes-eyebrow">
+                {seniorMode ? 'Confirmed: Level 5 — practice ready' : 'Make it specific'}
+              </div>
               <p className="overall-yes-lede">
-                You said the learner is overall a Level 4 or 5. Commit to which is more likely —
-                the distinction matters — and document the aggregate evidence behind it.
+                {seniorMode
+                  ? 'You said this learner is practice ready. Document the aggregate evidence behind that call — this is the defensible rationale the CCC stands behind.'
+                  : 'You said the learner is overall a Level 4 or 5. Commit to which is more likely — the distinction matters — and document the aggregate evidence behind it.'}
               </p>
 
-              <div className="overall-level-choices">
-                {[
-                  { key: '4', label: 'Level 4', sub: 'Limited support; supervisor not required to be readily available' },
-                  { key: '5', label: 'Level 5', sub: 'Practice ready; no assigned supervision needed' },
-                  { key: 'between', label: 'Between 4 & 5', sub: 'Clearly above 3B but not yet at 5' },
-                ].map((opt) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    className={`overall-level-choice ${gutCheck.overallLevel === opt.key ? 'selected' : ''}`}
-                    onClick={() => setGutCheck({ ...gutCheck, overallLevel: opt.key })}
-                  >
-                    <span className="overall-level-label">{opt.label}</span>
-                    <span className="overall-level-sub">{opt.sub}</span>
-                  </button>
-                ))}
-              </div>
+              {!seniorMode && (
+                <div className="overall-level-choices">
+                  {[
+                    { key: '4', label: 'Level 4', sub: 'Limited support; supervisor not required to be readily available' },
+                    { key: '5', label: 'Level 5', sub: 'Practice ready; no assigned supervision needed' },
+                    { key: 'between', label: 'Between 4 & 5', sub: 'Clearly above 3B but not yet at 5' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      className={`overall-level-choice ${gutCheck.overallLevel === opt.key ? 'selected' : ''}`}
+                      onClick={() => setGutCheck({ ...gutCheck, overallLevel: opt.key })}
+                    >
+                      <span className="overall-level-label">{opt.label}</span>
+                      <span className="overall-level-sub">{opt.sub}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="overall-rationale">
                 <label htmlFor="overall-rationale-text">
                   <span className="overall-rationale-label">
                     <span className="required-pill">Required</span>
-                    Why do you think this learner is overall at this level?
+                    {seniorMode
+                      ? 'Why do you think this learner is practice ready?'
+                      : 'Why do you think this learner is overall at this level?'}
                   </span>
                   <span className="overall-rationale-hint">
                     Name the aggregate evidence — patterns across rotations, continuity preceptor
