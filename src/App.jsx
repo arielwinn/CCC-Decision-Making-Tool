@@ -2,6 +2,9 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { EPAS, LEVELS, FOOTNOTE, framingQuestion } from './data';
 import './App.css';
 
+const isIntern = (pgy) => pgy === 'PGY-1';
+const isSenior = (pgy) => pgy === 'PGY-3' || pgy === 'PGY-4+';
+
 const newEpaData = () => {
   const d = {};
   EPAS.forEach(
@@ -23,7 +26,16 @@ export default function App() {
   // fake data, and no assessment is persisted until the user explicitly
   // clicks Finalize. A separate Demo Mode was redundant.
   const [trainee, setTrainee] = useState({ name: 'Test Resident', pgy: 'PGY-3', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
-  const [gutCheck, setGutCheck] = useState({ answer: null, notes: '' });
+  // gutCheck captures the committee's holistic Q1 (overall verdict). When the
+  // answer is "Yes", it forces a sub-choice between Level 4, Level 5, or
+  // genuinely between — and a required rationale. That rationale is the
+  // "defensible evidence" the CCC's purpose statement requires.
+  const [gutCheck, setGutCheck] = useState({
+    answer: null,
+    overallLevel: null,      // '4' | '5' | 'between' — only relevant when answer === 'Yes'
+    overallRationale: '',    // required when answer === 'Yes'
+    notes: '',
+  });
   const [themes, setThemes] = useState({ strengths: '', growth: '' });
   const [skipLevel2, setSkipLevel2] = useState(false);
   const [certified, setCertified] = useState(false);
@@ -133,7 +145,7 @@ export default function App() {
   const restart = () => {
     setScreen('landing');
     setTrainee({ name: 'Test Resident', pgy: 'PGY-3', period: new Date().toISOString().slice(0, 10), chair: 'Test CCC Member' });
-    setGutCheck({ answer: null, notes: '' });
+    setGutCheck({ answer: null, overallLevel: null, overallRationale: '', notes: '' });
     setThemes({ strengths: '', growth: '' });
     setSkipLevel2(false);
     // Note: badges persist across restarts on purpose (training investment).
@@ -228,6 +240,7 @@ export default function App() {
             themes={themes}
             setThemes={setThemes}
             certified={certified}
+            pgy={trainee.pgy}
             onContinue={() => {
               // Yes → per-EPA affirmation grid (Level 5 affirmation only)
               // Not yet / Unsure → single pre-picker check on Level 2 (always)
@@ -268,6 +281,7 @@ export default function App() {
               skipLevel2={skipLevel2}
               certified={certified}
               gutCheckAnswer={gutCheck.answer}
+              pgy={trainee.pgy}
               assignLevel={assignLevel}
               updateNote={updateNote}
               advanceStep={(s) => goto({ epaStep: s })}
@@ -379,7 +393,19 @@ function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, ba
           </p>
           <div className="form">
             <label>Trainee name<input value={trainee.name} onChange={(e) => setTrainee({ ...trainee, name: e.target.value })} /></label>
-            <label>PGY level<input value={trainee.pgy} onChange={(e) => setTrainee({ ...trainee, pgy: e.target.value })} /></label>
+            <label>
+              PGY level
+              <select
+                value={trainee.pgy}
+                onChange={(e) => setTrainee({ ...trainee, pgy: e.target.value })}
+              >
+                <option value="">Select…</option>
+                <option value="PGY-1">PGY-1 (intern)</option>
+                <option value="PGY-2">PGY-2</option>
+                <option value="PGY-3">PGY-3 (senior)</option>
+                <option value="PGY-4+">PGY-4+ (chief / senior)</option>
+              </select>
+            </label>
             <label>Review period / date<input value={trainee.period} onChange={(e) => setTrainee({ ...trainee, period: e.target.value })} /></label>
             <label>CCC reviewer<input value={trainee.chair} onChange={(e) => setTrainee({ ...trainee, chair: e.target.value })} /></label>
           </div>
@@ -403,9 +429,20 @@ function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, ba
               </p>
             </div>
           )}
-          <button className="btn-primary block cta-glow" onClick={onStart}>
+          <button
+            className="btn-primary block cta-glow"
+            onClick={onStart}
+            disabled={!trainee.pgy}
+            title={!trainee.pgy ? 'Select a PGY level first — it shapes how the tool reasons about data sufficiency.' : undefined}
+          >
             Begin Assessment →
           </button>
+          {!trainee.pgy && (
+            <p className="form-required-note">
+              <strong>PGY level is required.</strong> The tool tailors its prompts based on the
+              trainee's year — interns and seniors are read against different bars.
+            </p>
+          )}
         </div>
       </div>
 
@@ -434,7 +471,29 @@ function Landing({ trainee, setTrainee, skipLevel2, setSkipLevel2, certified, ba
   );
 }
 
-function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, onContinue }) {
+function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, onContinue }) {
+  // When the answer changes, reset the Yes-only sub-fields to keep state clean.
+  const setAnswer = (a) => {
+    if (a === 'Yes') {
+      setGutCheck({ ...gutCheck, answer: a });
+    } else {
+      // Switching to Not yet / Unsure clears the Yes-only fields.
+      setGutCheck({ ...gutCheck, answer: a, overallLevel: null, overallRationale: '' });
+    }
+  };
+
+  const showInternL5 =
+    gutCheck.answer === 'Yes' && gutCheck.overallLevel === '5' && isIntern(pgy);
+
+  const canContinue = (() => {
+    if (!gutCheck.answer) return false;
+    if (gutCheck.answer === 'Yes') {
+      if (!gutCheck.overallLevel) return false;
+      if (gutCheck.overallRationale.trim().length < 10) return false;
+    }
+    return true;
+  })();
+
   return (
     <div className="screen">
       <div className="gutcheck-hero">
@@ -483,12 +542,70 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, onConti
               <button
                 key={a}
                 className={`btn-choice ${gutCheck.answer === a ? 'selected' : ''}`}
-                onClick={() => setGutCheck({ ...gutCheck, answer: a })}
+                onClick={() => setAnswer(a)}
               >
                 {a}
               </button>
             ))}
           </div>
+
+          {gutCheck.answer === 'Yes' && (
+            <div className="overall-yes-block reveal-soft">
+              <div className="overall-yes-eyebrow">Make it specific</div>
+              <p className="overall-yes-lede">
+                You said the learner is overall a Level 4 or 5. Commit to which is more likely —
+                the distinction matters — and document the aggregate evidence behind it.
+              </p>
+
+              <div className="overall-level-choices">
+                {[
+                  { key: '4', label: 'Level 4', sub: 'Limited support; supervisor not required to be readily available' },
+                  { key: '5', label: 'Level 5', sub: 'Practice ready; no assigned supervision needed' },
+                  { key: 'between', label: 'Between 4 & 5', sub: 'Clearly above 3B but not yet at 5' },
+                ].map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    className={`overall-level-choice ${gutCheck.overallLevel === opt.key ? 'selected' : ''}`}
+                    onClick={() => setGutCheck({ ...gutCheck, overallLevel: opt.key })}
+                  >
+                    <span className="overall-level-label">{opt.label}</span>
+                    <span className="overall-level-sub">{opt.sub}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="overall-rationale">
+                <label htmlFor="overall-rationale-text">
+                  <span className="overall-rationale-label">
+                    <span className="required-pill">Required</span>
+                    Why do you think this learner is overall at this level?
+                  </span>
+                  <span className="overall-rationale-hint">
+                    Name the aggregate evidence — patterns across rotations, continuity preceptor
+                    voice, prior-cycle trajectory. This is the defensible rationale that anchors
+                    the per-EPA decisions you're about to make.
+                  </span>
+                </label>
+                <textarea
+                  id="overall-rationale-text"
+                  value={gutCheck.overallRationale}
+                  onChange={(e) => setGutCheck({ ...gutCheck, overallRationale: e.target.value })}
+                  rows={4}
+                  placeholder="e.g. Across two rotations and continuity, preceptors describe consistently safe and effective care with appropriate help-seeking. No new concerns flagged. Prior cycle was Level 4 with trajectory upward."
+                />
+                {gutCheck.overallRationale.trim().length > 0 &&
+                 gutCheck.overallRationale.trim().length < 10 && (
+                  <p className="overall-rationale-warn">
+                    A bit more specificity, please — what data supports this call?
+                  </p>
+                )}
+              </div>
+
+              {showInternL5 && <InternL5Callout context="overall" />}
+            </div>
+          )}
+
           <div className="gutcheck-reassurance">
             <div className="reassurance-line">
               <span className="reassurance-icon">♡</span>
@@ -599,7 +716,7 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, onConti
         </div>
       </div>
       <p className="note">Regardless of your answer, you'll now walk through each EPA.</p>
-      <button className="btn-primary" disabled={!gutCheck.answer} onClick={onContinue}>
+      <button className="btn-primary" disabled={!canContinue} onClick={onContinue}>
         Continue to EPA Review
       </button>
     </div>
@@ -1460,6 +1577,44 @@ function DataPrimer({ onBack }) {
 // Subtle, animated "future capability" marker — used to hint at connected
 // data, NLP synthesis, and collaborative review features that the prototype
 // is architected for but has not yet shipped.
+// InternL5Callout — surfaces whenever an intern lands at (or is about to land at)
+// Level 5. Disarms a real misuse: "this learner is practice ready as an intern,
+// so they should graduate now." Practice ready is the floor for graduation, not
+// the destination. The committee's job becomes setting goals beyond the floor.
+function InternL5Callout({ context = 'overall' }) {
+  const headlines = {
+    overall: 'Level 5 as an intern ≠ graduate now',
+    epa: 'Level 5 on this EPA — and the intern is just beginning',
+    summary: 'This intern has cleared the floor on at least one EPA',
+  };
+  return (
+    <div className={`intern-l5-callout intern-l5-${context}`} role="note">
+      <div className="intern-l5-eyebrow">
+        <span className="intern-l5-icon" aria-hidden="true">★</span>
+        <span>For interns at Level 5</span>
+      </div>
+      <h4 className="intern-l5-headline">{headlines[context]}</h4>
+      <p>
+        An intern <em>can</em> reach Level 5 for a specific EPA, and you should record it when
+        they do. But Level 5 is the <strong>floor</strong> for graduation eligibility — not the
+        destination.
+      </p>
+      <p>
+        Residency is a gift of time. The competency we want our graduates to take into
+        independent practice should <strong>far exceed</strong> the practice-ready threshold.
+        An intern who hits Level 5 has cleared the floor early — which is a chance to{' '}
+        <em>build height</em>, not an argument for shortening their training.
+      </p>
+      <p className="intern-l5-action">
+        <strong>The committee's job from here</strong> is not "how do we end this faster?" It is
+        — <em>what individualized goals are now possible because the baseline is secure?</em> A
+        specific population, a complex skill, a research question, a teaching role. Level 5
+        unlocks the goals that were waiting for the floor.
+      </p>
+    </div>
+  );
+}
+
 function ComingPanel({ icon, title, body, variant = 'default' }) {
   return (
     <div className={`coming-panel coming-${variant}`}>
@@ -1572,7 +1727,7 @@ function EpaPicker({ epaData, onPick, onSummary }) {
   );
 }
 
-function EpaFlow({ epaIndex, epaStep, epaData, skipLevel2, certified, gutCheckAnswer, assignLevel, updateNote, advanceStep, finish }) {
+function EpaFlow({ epaIndex, epaStep, epaData, skipLevel2, certified, gutCheckAnswer, pgy, assignLevel, updateNote, advanceStep, finish }) {
   const epa = EPAS[epaIndex];
   const data = epaData[epa.id];
 
@@ -1656,14 +1811,15 @@ function EpaFlow({ epaIndex, epaStep, epaData, skipLevel2, certified, gutCheckAn
       />
     );
 
-  if (epaStep === 6) return <EpaResult epa={epa} level={data.level} onContinue={finish} />;
+  if (epaStep === 6) return <EpaResult epa={epa} level={data.level} pgy={pgy} onContinue={finish} />;
 
   return null;
 }
 
-function EpaResult({ epa, level, onContinue }) {
+function EpaResult({ epa, level, pgy, onContinue }) {
   const lvl = LEVELS.find((l) => l.key === level);
   const isFive = level === '5';
+  const showIntern = isFive && isIntern(pgy);
   return (
     <div className="screen result-screen">
       <div className="progress">Decision</div>
@@ -1709,6 +1865,8 @@ function EpaResult({ epa, level, onContinue }) {
           </div>
         </div>
       )}
+
+      {showIntern && <InternL5Callout context="epa" />}
 
       <Scale ruledOut={[]} highlight={[level]} assigned={level} />
       <div className="button-row">
@@ -1934,6 +2092,9 @@ function NotesArea({ label, value, onChange, rows = 5 }) {
 
 function Summary({ trainee, gutCheck, themes, epaData, finalizedAt, onFinalize, onJumpToEpa, onRestart }) {
   const [showFinalize, setShowFinalize] = useState(false);
+  const internWithLevel5 =
+    isIntern(trainee.pgy) &&
+    Object.values(epaData).some((d) => d.level === '5');
   const counts = useMemo(() => {
     const c = {};
     LEVELS.forEach((l) => (c[l.key] = 0));
@@ -2143,6 +2304,8 @@ function Summary({ trainee, gutCheck, themes, epaData, finalizedAt, onFinalize, 
           )}
         </div>
       )}
+
+      {internWithLevel5 && <InternL5Callout context="summary" />}
 
       <div className="distribution">
         {LEVELS.map((l) => (
