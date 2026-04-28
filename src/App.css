@@ -3347,3 +3347,92 @@ select:hover { border-color: var(--border-strong); }
 }
 .junior-normalizing-callout p:last-child { margin-bottom: 0; }
 .junior-normalizing-callout strong { color: #4c1d95; font-weight: 700; }
+
+/* =============================================================
+   Level 4 / 5 definitions card — operational vocabulary anchor
+   ============================================================= */
+.level-defs-card {
+  margin: 18px 0 22px;
+  padding: 22px 26px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  animation: softReveal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.level-defs-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 14px;
+}
+.level-defs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 760px) {
+  .level-defs-grid { grid-template-columns: 1fr; }
+}
+
+.level-def {
+  display: flex;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  transition: all 0.15s ease;
+}
+.level-def:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.level-def-5 { border-left: 4px solid #4caf50; }
+.level-def-4 { border-left: 4px solid #aed15a; }
+
+.level-def-pill {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  margin-top: 2px;
+}
+
+.level-def-body { flex: 1; min-width: 0; }
+.level-def-headline {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy-ink);
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+.level-def-body p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.level-def-body p:last-child { margin-bottom: 0; }
+.level-def-body strong { color: var(--navy-ink); font-weight: 700; }
+.level-def-body em { color: var(--navy); font-style: italic; font-weight: 500; }
+
+.level-def-aside {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid rgba(139, 176, 151, 0.4);
+  font-size: 13px !important;
+  color: var(--text-2) !important;
+}

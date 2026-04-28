@@ -538,6 +538,9 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
           for future patients, would their care be safe and effective?
         </h2>
       )}
+
+      <LevelDefinitionsCard />
+
       {!certified && (
         <div className="frame-banner">
           <div className="frame-banner-eyebrow">What the bar actually means</div>
@@ -1607,6 +1610,57 @@ function DataPrimer({ onBack }) {
 // Subtle, animated "future capability" marker — used to hint at connected
 // data, NLP synthesis, and collaborative review features that the prototype
 // is architected for but has not yet shipped.
+// LevelDefinitionsCard — anchors the Overall Call screen with concrete operational
+// definitions of Level 5 and Level 4. The Yes-path sub-choice asks the committee
+// to commit to one of these, so the definitions need to appear before the question
+// is answered — not as teaching, but as the working vocabulary for the call.
+//
+// The key distinction this card makes explicit: "limited support" at Level 4
+// refers to SAFETY OVERSIGHT, separate from the teaching and growth a supervisor
+// continues to provide at every level. Competence isn't the end of teaching —
+// only the end of assigned safety oversight.
+function LevelDefinitionsCard() {
+  return (
+    <div className="level-defs-card">
+      <div className="level-defs-eyebrow">What Level 4 and Level 5 mean</div>
+      <div className="level-defs-grid">
+        <div className="level-def level-def-5">
+          <div className="level-def-pill" style={{ background: '#4caf50' }}>5</div>
+          <div className="level-def-body">
+            <div className="level-def-headline">Practice ready</div>
+            <p>
+              <strong>No supervisor needs to be assigned</strong> to oversee this learner's care
+              to ensure it is safe and effective. They know their limits, seek help when
+              warranted, and collaborate thoughtfully — like every practicing physician.
+            </p>
+            <p className="level-def-aside">
+              Teaching and growth from supervisors continue at this level — because that role
+              never ends, regardless of competence.
+            </p>
+          </div>
+        </div>
+
+        <div className="level-def level-def-4">
+          <div className="level-def-pill" style={{ background: '#aed15a' }}>4</div>
+          <div className="level-def-body">
+            <div className="level-def-headline">Not quite practice ready</div>
+            <p>
+              A supervisor is <strong>still required</strong> to ensure this learner's care is
+              safe and effective — but they only need to provide <strong>limited support</strong>
+              around that safety oversight, and they do not need to be readily available.
+            </p>
+            <p className="level-def-aside">
+              "Limited support" refers only to the safety-oversight role. The teaching and growth
+              a supervisor provides is a <em>separate</em> role that continues at every level —
+              and is one of the gifts of residency, not a sign the learner isn't ready.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // InternL5Callout — surfaces whenever an intern lands at (or is about to land at)
 // Level 5. Disarms a real misuse: "this learner is practice ready as an intern,
 // so they should graduate now." Practice ready is the floor for graduation, not
