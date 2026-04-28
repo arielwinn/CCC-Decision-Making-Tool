@@ -508,9 +508,10 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
       <div className="ccc-mission">
         <div className="ccc-mission-eyebrow">The committee's job</div>
         <p className="ccc-mission-statement">
-          Ensure that, at the time of graduation, we can state with confidence that each learner
-          is <strong>practice ready</strong> — meaning <em>no supervisor needs to be assigned to
-          oversee their care to ensure it is safe and effective.</em>
+          Ensure that, by the time of graduation, we can state with confidence that each learner
+          is <strong>practice ready</strong> — meaning they can enter a typical general
+          pediatrics practice <em>without a supervisor assigned to oversee their care</em>, and
+          the care they provide will be <em>safe and effective</em>.
         </p>
         <p className="ccc-mission-bridge">
           Before we delve into each EPA, get a sense of whether this learner is likely to be
