@@ -505,41 +505,48 @@ function GutCheck({ gutCheck, setGutCheck, themes, setThemes, certified, pgy, on
           and the <span className="gutcheck-hero-accent">future patients</span> they will care for.
         </p>
       </div>
-      {isJuniorLearner(pgy) ? (
-        <>
-          <div className="pgy-context-eyebrow">
-            {pgy === 'PGY-1' ? 'For an intern' : 'For a junior'}
-          </div>
-          <h2 className="question">
-            Do you have reason to believe this learner is overall at <em>Level 4 or 5</em>?
-          </h2>
-          <div className="junior-normalizing-callout">
-            <div className="junior-norm-eyebrow">A threshold, not a ceiling</div>
-            <p>
-              In the <strong>first 18 months of training</strong>, many residents are at Level 4
-              or 5 for some EPAs — and many aren't yet. <strong>Both are okay.</strong> Level 4
-              or 5 is a <em>threshold</em>, not a <em>ceiling</em>: clearing it doesn't mean
-              training is done, and not clearing it doesn't mean something is wrong. The
-              committee's job is to read each learner where they actually are, not against an
-              expectation.
-            </p>
-            <p>
-              Whichever way you answer, the operative work is the same:{' '}
-              <strong>name what specific areas need attention</strong> if you said "Not yet," and{' '}
-              <strong>confirm you have continuous data showing trajectory</strong>. A junior
-              without trajectory data isn't necessarily struggling — they're invisible to us.
-              That itself is something the CCC must act on.
-            </p>
-          </div>
-        </>
-      ) : (
-        <h2 className="question">
-          If this learner started in a typical General Pediatrics practice today and began caring
-          for future patients, would their care be safe and effective?
-        </h2>
-      )}
+      <div className="ccc-mission">
+        <div className="ccc-mission-eyebrow">The committee's job</div>
+        <p className="ccc-mission-statement">
+          Ensure that, at the time of graduation, we can state with confidence that each learner
+          is <strong>practice ready</strong> — meaning <em>no supervisor needs to be assigned to
+          oversee their care to ensure it is safe and effective.</em>
+        </p>
+        <p className="ccc-mission-bridge">
+          Before we delve into each EPA, get a sense of whether this learner is likely to be
+          practice ready — or almost practice ready — as they sit today.
+        </p>
+      </div>
+
+      <h2 className="question question-imagine">
+        Imagine this learner entering a typical General Pediatrics practice today and caring for
+        patients in that setting. Would they meet criteria for{' '}
+        <em>Level 4 or 5</em>?
+      </h2>
+      <p className="question-followup">Definitions below.</p>
 
       <LevelDefinitionsCard />
+
+      {isJuniorLearner(pgy) && (
+        <div className="junior-normalizing-callout">
+          <div className="junior-norm-eyebrow">A threshold, not a ceiling</div>
+          <p>
+            In the <strong>first 18 months of training</strong>, many residents are at Level 4
+            or 5 for some EPAs — and many aren't yet. <strong>Both are okay.</strong> Level 4
+            or 5 is a <em>threshold</em>, not a <em>ceiling</em>: clearing it doesn't mean
+            training is done, and not clearing it doesn't mean something is wrong. The
+            committee's job is to read each learner where they actually are, not against an
+            expectation.
+          </p>
+          <p>
+            Whichever way you answer, the operative work is the same:{' '}
+            <strong>name what specific areas need attention</strong> if you said "Not yet," and{' '}
+            <strong>confirm you have continuous data showing trajectory</strong>. A junior
+            without trajectory data isn't necessarily struggling — they're invisible to us.
+            That itself is something the CCC must act on.
+          </p>
+        </div>
+      )}
 
       {!certified && (
         <div className="frame-banner">
@@ -1643,7 +1650,7 @@ function LevelDefinitionsCard() {
         <div className="level-def level-def-4">
           <div className="level-def-pill" style={{ background: '#aed15a' }}>4</div>
           <div className="level-def-body">
-            <div className="level-def-headline">Not quite practice ready</div>
+            <div className="level-def-headline">Not quite practice ready, but close</div>
             <p>
               A supervisor is <strong>still required</strong> to ensure this learner's care is
               safe and effective — but they only need to provide <strong>limited support</strong>

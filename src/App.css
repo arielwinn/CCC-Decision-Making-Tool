@@ -3349,6 +3349,78 @@ select:hover { border-color: var(--border-strong); }
 .junior-normalizing-callout strong { color: #4c1d95; font-weight: 700; }
 
 /* =============================================================
+   CCC mission statement (opening of Overall Call screen)
+   ============================================================= */
+.ccc-mission {
+  position: relative;
+  margin: 0 0 24px;
+  padding: 26px 30px;
+  background: linear-gradient(135deg, var(--navy-ink) 0%, var(--navy-2) 100%);
+  color: rgba(255, 255, 255, 0.94);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px -10px rgba(27, 42, 73, 0.32),
+              0 4px 10px -2px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+.ccc-mission::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(620px 220px at 100% 0%, rgba(139, 176, 151, 0.22), transparent 65%);
+  pointer-events: none;
+}
+.ccc-mission > * { position: relative; }
+.ccc-mission-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  margin-bottom: 14px;
+}
+.ccc-mission-statement {
+  margin: 0 0 14px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+  line-height: 1.45;
+  color: #fff;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  max-width: 64ch;
+}
+.ccc-mission-statement strong {
+  color: #fff;
+  font-weight: 700;
+  font-style: italic;
+}
+.ccc-mission-statement em {
+  color: rgba(255, 255, 255, 0.82);
+  font-style: italic;
+  font-weight: 400;
+}
+.ccc-mission-bridge {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(139, 176, 151, 0.3);
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+  font-style: italic;
+}
+
+.question-imagine {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+.question-followup {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* =============================================================
    Level 4 / 5 definitions card — operational vocabulary anchor
    ============================================================= */
 .level-defs-card {
